@@ -1,3 +1,3 @@
-# popup_playground
+# Popup Playground
 
-A new Flutter project.
+A Flutter project that demonstrates the capabilities of Flutter SDK to build different variations of popups. 

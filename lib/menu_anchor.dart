@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:popup_playground/countries.dart';
 
@@ -34,8 +33,28 @@ class _MenuAnchorShowcaseState extends State<MenuAnchorShowcase> {
       children: [
         Text('MenuAnchor', style: textTheme.headlineLarge),
         const SizedBox(height: 8),
-        Text(
-          'MenuAnchor is a Material You widget that renders an anchored menu.',
+        Text.rich(
+          TextSpan(
+            text: 'The ',
+            style: textTheme.bodyLarge,
+            children: [
+              TextSpan(
+                text: 'MenuAnchor',
+                style: textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const TextSpan(
+                text: ' is a Material 3 widget that allows you to anchor a menu to an element. ',
+              ),
+              const TextSpan(
+                text: 'It is quite customizable and can be used '
+                    'to create dropdowns, context menus, and more. ',
+              ),
+              const TextSpan(
+                text: 'Though it is possible to put only one item inside the menu and use it '
+                    'as a custom popup, it is not a recommended way to use this widget.',
+              ),
+            ],
+          ),
           style: textTheme.bodyLarge,
         ),
         const SizedBox(height: 16),

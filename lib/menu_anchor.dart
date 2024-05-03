@@ -37,10 +37,10 @@ class _MenuAnchorShowcaseState extends State<MenuAnchorShowcase> {
     return SliverList.list(
       children: [
         Text('MenuAnchor', style: textTheme.headlineLarge),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         Text(
           'MenuAnchor is a Material You widget that renders an anchored menu.',
-          style: textTheme.bodyMedium,
+          style: textTheme.bodyLarge,
         ),
         const SizedBox(height: 16),
         Wrap(
@@ -72,8 +72,7 @@ class _MenuAnchorShowcaseState extends State<MenuAnchorShowcase> {
               controller: _styledController,
               style: MenuStyle(
                 elevation: const MaterialStatePropertyAll(8),
-                backgroundColor:
-                    MaterialStatePropertyAll(colorScheme.tertiaryContainer),
+                backgroundColor: MaterialStatePropertyAll(colorScheme.tertiaryContainer),
               ),
               menuChildren: [
                 ListTile(
@@ -192,8 +191,7 @@ class _CustomMenuState extends State<_CustomMenu> {
                               ScaffoldMessenger.of(context)
                                 ..clearSnackBars()
                                 ..showSnackBar(SnackBar(
-                                  content:
-                                      Text('Text submitted: ${value.text}'),
+                                  content: Text('Text submitted: ${value.text}'),
                                   duration: const Duration(seconds: 1),
                                 ));
                             },

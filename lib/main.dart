@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:popup_playground/dropdown_button.dart';
+import 'package:popup_playground/dropdown_menu.dart';
 import 'package:popup_playground/menu_anchor.dart';
 
 void main() {
@@ -35,30 +37,17 @@ class _BodyState extends State<_Body> {
       slivers: [
         SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
-          sliver: SliverMainAxisGroup(
+          sliver: const SliverMainAxisGroup(
             slivers: [
-              SliverAppBar(
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.code),
-                    onPressed: () {
-                      showAboutDialog(
-                        context: context,
-                        applicationIcon: const FlutterLogo(),
-                        applicationName: 'MenuAnchor Example',
-                        applicationVersion: '1.0.0',
-                        children: const [
-                          Text('This is an example app for the MenuAnchor package.'),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-                floating: true,
-                pinned: true,
-                snap: false,
+              MenuAnchorShowcase(),
+              SliverPadding(
+                padding: EdgeInsets.only(top: 32),
               ),
-              const MenuAnchorShowcase(),
+              DropdownButtonShowcase(),
+              SliverPadding(
+                padding: EdgeInsets.only(top: 32),
+              ),
+              DropdownMenuShowcase(),
             ],
           ),
         ),
@@ -66,3 +55,4 @@ class _BodyState extends State<_Body> {
     );
   }
 }
+

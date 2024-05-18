@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:popup_playground/custom.dart';
 import 'package:popup_playground/dropdown_button.dart';
-import 'package:popup_playground/dropdown_menu.dart';
 import 'package:popup_playground/menu_anchor.dart';
 
 void main() {
@@ -48,7 +47,6 @@ class _BodyState extends State<_Body> {
               SliverPadding(
                 padding: EdgeInsets.only(top: 32),
               ),
-              DropdownMenuShowcase(),
               SliverPadding(
                 padding: EdgeInsets.only(top: 32),
               ),

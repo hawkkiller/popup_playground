@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:popup_playground/widgets/enhanced_composited_transform_follower.dart';
 import 'package:popup_playground/widgets/enhanced_composited_transform_target.dart';
 
@@ -93,6 +95,7 @@ class _PopupState extends State<Popup> {
           controller: portalController,
           child: widget.child(context, portalController),
           overlayChildBuilder: (BuildContext context) => FocusScope(
+            debugLabel: 'Popup',
             autofocus: true,
             child: Center(
               child: EnhancedCompositedTransformFollower(
@@ -107,4 +110,73 @@ class _PopupState extends State<Popup> {
           ),
         ),
       );
+}
+
+/// Follower builder that wraps the child widget.
+typedef PopupFollowerBuilder = Widget Function(BuildContext context, Widget? child);
+
+/// {@template popup_follower}
+/// A widget that adds additional functionality to the child widget.
+///
+/// It listens for the escape key and dismisses the popup when pressed.
+/// It also listens for the tap outside the child widget and dismisses the popup.
+/// {@endtemplate}
+class PopupFollower extends StatelessWidget {
+  /// Creates a new instance of [PopupFollower].
+  ///
+  /// {@macro popup_follower}
+  const PopupFollower({
+    this.child,
+    this.builder,
+    this.onDismiss,
+    this.tapRegionGroupId,
+    super.key,
+  }) : assert(child != null || builder != null);
+
+  /// The child widget that is wrapped.
+  final Widget? child;
+
+  /// Optional builder that wraps the child widget.
+  final PopupFollowerBuilder? builder;
+
+  /// The callback that is called when the popup is dismissed.
+  ///
+  /// If this callback is not provided, the popup will not be dismissible.
+  final VoidCallback? onDismiss;
+
+  /// The group id of the [TapRegion].
+  final Object? tapRegionGroupId;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget? child;
+
+    if (builder != null) {
+      child = builder!(context, this.child);
+    } else {
+      child = this.child;
+    }
+
+    return Actions(
+      actions: {
+        DismissIntent: CallbackAction<DismissIntent>(
+          onInvoke: (intent) => onDismiss?.call(),
+        ),
+      },
+      child: Shortcuts(
+        debugLabel: 'PopupFollower',
+        shortcuts: {
+          LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
+        },
+        child: Focus(
+          autofocus: true,
+          child: TapRegion(
+            groupId: tapRegionGroupId,
+            onTapOutside: (_) => onDismiss?.call(),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
 }

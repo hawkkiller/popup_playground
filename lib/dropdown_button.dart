@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:popup_playground/widgets/showcase_shared_widgets.dart';
+import 'package:popup_playground/widgets/showcase_widgets.dart';
 
 class DropdownButtonShowcase extends StatefulWidget {
   const DropdownButtonShowcase({super.key});

@@ -86,8 +86,8 @@ class _MenuAnchorShowcaseState extends State<MenuAnchorShowcase> {
             MenuAnchor(
               controller: _styledController,
               style: MenuStyle(
-                elevation: const MaterialStatePropertyAll(8),
-                backgroundColor: MaterialStatePropertyAll(colorScheme.tertiaryContainer),
+                elevation: const WidgetStatePropertyAll(8),
+                backgroundColor: WidgetStatePropertyAll(colorScheme.tertiaryContainer),
               ),
               menuChildren: [
                 ListTile(
@@ -124,7 +124,7 @@ class _MenuAnchorShowcaseState extends State<MenuAnchorShowcase> {
             MenuAnchor(
               controller: _customController,
               style: MenuStyle(
-                shape: MaterialStatePropertyAll(
+                shape: WidgetStatePropertyAll(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -142,7 +142,7 @@ class _MenuAnchorShowcaseState extends State<MenuAnchorShowcase> {
             MenuAnchor(
               controller: _countryController,
               style: MenuStyle(
-                shape: MaterialStatePropertyAll(
+                shape: WidgetStatePropertyAll(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

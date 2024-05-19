@@ -1,7 +1,14 @@
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
+/// A link that can be established between a [EnhancedCompositedTransformTarget] and a
+/// [EnhancedCompositedTransformFollower].
+///
+/// The only difference between this and the original [LayerLink] is that this
+/// class has a [leaderRenderObject] property that is used to store the render
+/// object of the leader.
 class EnhancedLayerLink extends LayerLink {
+  /// The render object of the leader.
   RenderBox? leaderRenderObject;
 }
 

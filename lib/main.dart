@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:popup_playground/custom.dart';
+import 'package:popup_playground/custom_popups.dart';
 import 'package:popup_playground/dropdown_button.dart';
 import 'package:popup_playground/menu_anchor.dart';
 
@@ -9,14 +9,23 @@ void main() {
   runApp(const MainApp());
 }
 
+final lightTheme = ThemeData.from(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue));
+
+final darkTheme = ThemeData.from(
+  colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
+);
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      home: Scaffold(body: _Body()),
+      home: const Scaffold(body: _Body()),
     );
   }
 }
@@ -39,18 +48,13 @@ class _BodyState extends State<_Body> {
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
           sliver: const SliverMainAxisGroup(
             slivers: [
-              MenuAnchorShowcase(),
-              SliverPadding(
-                padding: EdgeInsets.only(top: 32),
-              ),
-              DropdownButtonShowcase(),
-              SliverPadding(
-                padding: EdgeInsets.only(top: 32),
-              ),
-              SliverPadding(
-                padding: EdgeInsets.only(top: 32),
-              ),
               CustomPopupsShowcase(),
+              SliverPadding(padding: EdgeInsets.only(top: 32)),
+              MenuAnchorShowcase(),
+              SliverPadding(padding: EdgeInsets.only(top: 32)),
+              DropdownButtonShowcase(),
+              SliverPadding(padding: EdgeInsets.only(top: 32)),
+              SliverPadding(padding: EdgeInsets.only(top: 32)),
             ],
           ),
         ),

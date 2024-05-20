@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:popup_playground/widgets/enhanced_composited_transform_target.dart';
 
 /// A widget that follows a [CompositedTransformTarget].
-/// 
+///
 /// The only difference between this widget and [CompositedTransformFollower] is
 /// that this widget prevents the follower from overflowing the screen.
 ///
@@ -46,6 +46,8 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
     this.edgePadding = EdgeInsets.zero,
     this.targetAnchor = Alignment.topLeft,
     this.followerAnchor = Alignment.topLeft,
+    this.flip = true,
+    this.adjustForOverflow = true,
     super.child,
   });
 
@@ -91,6 +93,22 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
   /// Minimum padding from the edge of the screen.
   final EdgeInsets edgePadding;
 
+  /// Whether to flip the follower widget when it overflows the screen.
+  ///
+  /// For example, if the follower widget overflows the screen on the right side,
+  /// it will be flipped to the left side.
+  ///
+  /// Defaults to `true`.
+  final bool flip;
+
+  /// Whether to adjust the position of the follower widget when it overflows the screen.
+  ///
+  /// For example, if the follower widget overflows the screen on the right side for 20 pixels,
+  /// it will be moved to the left side for 20 pixels, same for the top, bottom, and left sides.
+  ///
+  /// Defaults to `true`.
+  final bool adjustForOverflow;
+
   @override
   EnhancedRenderFollowerLayer createRenderObject(BuildContext context) {
     return EnhancedRenderFollowerLayer(
@@ -99,6 +117,8 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
       edgePadding: edgePadding,
       leaderAnchor: targetAnchor,
       followerAnchor: followerAnchor,
+      flip: flip,
+      adjustForOverflow: adjustForOverflow,
     );
   }
 
@@ -109,7 +129,8 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
       ..showWhenUnlinked = showWhenUnlinked
       ..leaderAnchor = targetAnchor
       ..followerAnchor = followerAnchor
-      ..edgePadding = edgePadding;
+      ..edgePadding = edgePadding
+      ..flip = flip;
   }
 }
 
@@ -131,11 +152,15 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
   EnhancedRenderFollowerLayer({
     required EnhancedLayerLink link,
     bool showWhenUnlinked = true,
+    bool flip = true,
+    bool adjustForOverflow = true,
     EdgeInsets edgePadding = EdgeInsets.zero,
     Alignment leaderAnchor = Alignment.topLeft,
     Alignment followerAnchor = Alignment.topLeft,
     RenderBox? child,
   })  : _link = link,
+        _flip = flip,
+        _adjustForOverflow = adjustForOverflow,
         _showWhenUnlinked = showWhenUnlinked,
         _edgePadding = edgePadding,
         _leaderAnchor = leaderAnchor,
@@ -184,6 +209,23 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  /// Whether to adjust the position of the follower widget when it overflows the screen.
+  ///
+  /// For example, if the follower widget overflows the screen on the right side for 20 pixels,
+  /// it will be moved to the left side for 20 pixels, same for the top, bottom, and left sides.
+  ///
+  /// Defaults to `true`.
+  bool get adjustForOverflow => _adjustForOverflow;
+  bool _adjustForOverflow;
+
+  set adjustForOverflow(bool value) {
+    if (_adjustForOverflow == value) {
+      return;
+    }
+    _adjustForOverflow = value;
+    markNeedsPaint();
+  }
+
   /// The anchor point on the linked [RenderLeaderLayer] that [followerAnchor]
   /// will line up with.
   ///
@@ -221,6 +263,23 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
       return;
     }
     _followerAnchor = value;
+    markNeedsPaint();
+  }
+
+  /// Whether to flip the follower widget when it overflows the screen.
+  ///
+  /// For example, if the follower widget overflows the screen on the right side,
+  /// it will be flipped to the left side.
+  ///
+  /// Defaults to `true`.
+  bool get flip => _flip;
+
+  bool _flip;
+  set flip(bool value) {
+    if (_flip == value) {
+      return;
+    }
+    _flip = value;
     markNeedsPaint();
   }
 
@@ -294,26 +353,30 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     final leaderGlobalPosition = link.leaderRenderObject!.localToGlobal(Offset.zero);
     final leaderSize = link.leaderSize!;
 
-    final relativeOffset = leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size);
-    final followerGlobalPosition = leaderGlobalPosition + relativeOffset;
+    final followerRelativeOffset =
+        leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size);
+    final followerGlobalPosition = leaderGlobalPosition + followerRelativeOffset;
 
-    final linkedOffset = _adjustForOverflow(
-          followerRect: Rect.fromLTWH(
-            followerGlobalPosition.dx,
-            followerGlobalPosition.dy,
-            size.width,
-            size.height,
-          ),
-          targetRect: Rect.fromLTWH(
-            leaderGlobalPosition.dx,
-            leaderGlobalPosition.dy,
-            leaderSize.width,
-            leaderSize.height,
-          ),
-          screenSize: constraints.biggest,
-          edgePadding: edgePadding,
-        ) -
-        leaderGlobalPosition;
+    final linkedOffset = adjustForOverflow
+        ? _adjustOverflow(
+              followerRect: Rect.fromLTWH(
+                followerGlobalPosition.dx,
+                followerGlobalPosition.dy,
+                size.width,
+                size.height,
+              ),
+              targetRect: Rect.fromLTWH(
+                leaderGlobalPosition.dx,
+                leaderGlobalPosition.dy,
+                leaderSize.width,
+                leaderSize.height,
+              ),
+              screenSize: constraints.biggest,
+              edgePadding: edgePadding,
+              flip: flip,
+            ) -
+            leaderGlobalPosition
+        : followerRelativeOffset;
 
     if (layer == null) {
       layer = FollowerLayer(
@@ -347,57 +410,74 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     }());
   }
 
-  Offset _adjustForOverflow({
-  required Rect followerRect,
-  required Rect targetRect,
-  required Size screenSize,
-  required EdgeInsets edgePadding,
-}) {
-  double dx = followerRect.left;
-  double dy = followerRect.top;
+  Offset _adjustOverflow({
+    required Rect followerRect,
+    required Rect targetRect,
+    required Size screenSize,
+    required EdgeInsets edgePadding,
+    required bool flip,
+  }) {
+    double dx = followerRect.left;
+    double dy = followerRect.top;
 
-  // Effective screen area considering edge padding
-  final double leftBoundary = edgePadding.left;
-  final double topBoundary = edgePadding.top;
-  final double rightBoundary = screenSize.width - edgePadding.right;
-  final double bottomBoundary = screenSize.height - edgePadding.bottom;
+    // Effective screen area considering edge padding
+    final double leftBoundary = edgePadding.left;
+    final double topBoundary = edgePadding.top;
+    final double rightBoundary = screenSize.width - edgePadding.right;
+    final double bottomBoundary = screenSize.height - edgePadding.bottom;
 
-  // Check for horizontal overflow
-  if (dx + followerRect.width > rightBoundary) {
-    // Not enough space on the right, try left side
-    if (targetRect.left - followerRect.width >= leftBoundary) {
-      dx = targetRect.left - followerRect.width;
+    // Check for horizontal overflow
+    if (flip) {
+      if (dx + followerRect.width > rightBoundary) {
+        // Try left side first if not enough space on the right
+        if (targetRect.left - followerRect.width >= leftBoundary) {
+          dx = targetRect.left - followerRect.width;
+        } else {
+          dx = rightBoundary - followerRect.width;
+        }
+      } else if (dx < leftBoundary) {
+        // Try right side first if not enough space on the left
+        if (targetRect.right + followerRect.width <= rightBoundary) {
+          dx = targetRect.right;
+        } else {
+          dx = leftBoundary;
+        }
+      }
     } else {
-      dx = rightBoundary - followerRect.width;
+      if (dx + followerRect.width > rightBoundary) {
+        dx = rightBoundary - followerRect.width;
+      } else if (dx < leftBoundary) {
+        dx = leftBoundary;
+      }
     }
-  } else if (dx < leftBoundary) {
-    // Not enough space on the left, try right side
-    if (targetRect.right + followerRect.width <= rightBoundary) {
-      dx = targetRect.right;
+
+    // Check for vertical overflow
+    if (flip) {
+      if (dy + followerRect.height > bottomBoundary) {
+        // Try top side first if not enough space at the bottom
+        if (targetRect.top - followerRect.height >= topBoundary) {
+          dy = targetRect.top - followerRect.height;
+        } else {
+          dy = bottomBoundary - followerRect.height;
+        }
+      } else if (dy < topBoundary) {
+        // Try bottom side first if not enough space at the top
+        if (targetRect.bottom + followerRect.height <= bottomBoundary) {
+          dy = targetRect.bottom;
+        } else {
+          dy = topBoundary;
+        }
+      }
     } else {
-      dx = leftBoundary;
+      if (dy + followerRect.height > bottomBoundary) {
+        dy = bottomBoundary - followerRect.height;
+      } else if (dy < topBoundary) {
+        dy = topBoundary;
+      }
     }
+
+    return Offset(dx, dy);
   }
-
-  // Check for vertical overflow
-  if (dy + followerRect.height > bottomBoundary) {
-    // Not enough space at the bottom, try top side
-    if (targetRect.top - followerRect.height >= topBoundary) {
-      dy = targetRect.top - followerRect.height;
-    } else {
-      dy = bottomBoundary - followerRect.height;
-    }
-  } else if (dy < topBoundary) {
-    // Not enough space at the top, try bottom side
-    if (targetRect.bottom + followerRect.height <= bottomBoundary) {
-      dy = targetRect.bottom;
-    } else {
-      dy = topBoundary;
-    }
-  }
-
-  return Offset(dx, dy);
-}
 
   @override
   void applyPaintTransform(RenderBox child, Matrix4 transform) {

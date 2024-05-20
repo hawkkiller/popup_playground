@@ -30,6 +30,8 @@ class Popup extends StatefulWidget {
   const Popup({
     required this.child,
     required this.follower,
+    this.flip = true,
+    this.adjustForOverflow = true,
     this.edgeInsets = EdgeInsets.zero,
     this.followerAnchor = Alignment.topCenter,
     this.targetAnchor = Alignment.bottomCenter,
@@ -62,6 +64,22 @@ class Popup extends StatefulWidget {
   ///
   /// If not provided, a new controller will be created.
   final OverlayPortalController? controller;
+
+  /// Whether to flip the follower widget when it overflows the screen.
+  ///
+  /// For example, if the follower widget overflows the screen on the right side,
+  /// it will be flipped to the left side.
+  ///
+  /// Defaults to `true`.
+  final bool flip;
+
+  /// Whether to adjust the position of the follower widget when it overflows the screen.
+  ///
+  /// For example, if the follower widget overflows the screen on the right side for 20 pixels,
+  /// it will be moved to the left side for 20 pixels, same for the top, bottom, and left sides.
+  ///
+  /// Defaults to `true`.
+  final bool adjustForOverflow;
 
   @override
   State<Popup> createState() => _PopupState();
@@ -104,6 +122,8 @@ class _PopupState extends State<Popup> {
                 followerAnchor: widget.followerAnchor,
                 targetAnchor: widget.targetAnchor,
                 edgePadding: widget.edgeInsets,
+                flip: widget.flip,
+                adjustForOverflow: widget.adjustForOverflow,
                 child: Builder(builder: (context) => widget.follower(context, portalController)),
               ),
             ),

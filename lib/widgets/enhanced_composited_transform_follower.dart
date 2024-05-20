@@ -40,7 +40,6 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
   ///
   /// The [showWhenUnlinked] and [edgePadding] properties must also not be null.
   const EnhancedCompositedTransformFollower({
-    super.key,
     required this.link,
     this.showWhenUnlinked = true,
     this.edgePadding = EdgeInsets.zero,
@@ -49,6 +48,7 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
     this.flip = true,
     this.adjustForOverflow = true,
     super.child,
+    super.key,
   });
 
   /// The link object that connects this [EnhancedCompositedTransformFollower] with a

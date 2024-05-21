@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:popup_playground/widgets/enhanced_composited_transform_follower.dart';
@@ -28,19 +27,21 @@ class Popup extends StatefulWidget {
   ///
   /// {@macro popup}
   const Popup({
-    required this.child,
+    required this.target,
     required this.follower,
+    this.controller,
     this.flip = true,
     this.adjustForOverflow = true,
     this.edgeInsets = EdgeInsets.zero,
     this.followerAnchor = Alignment.topCenter,
     this.targetAnchor = Alignment.bottomCenter,
-    this.controller,
+    this.enforceLeaderWidth = false,
+    this.enforceLeaderHeight = false,
     super.key,
   });
 
   /// The target widget that the follower widget is positioned relative to.
-  final PopupWidgetBuilder child;
+  final PopupWidgetBuilder target;
 
   /// The widget that is positioned relative to the target widget.
   final PopupWidgetBuilder follower;
@@ -81,6 +82,20 @@ class Popup extends StatefulWidget {
   /// Defaults to `true`.
   final bool adjustForOverflow;
 
+  /// Whether to enforce the width of the leader widget on the follower widget.
+  ///
+  /// This can be useful to make follower widget be the same width as the leader widget.
+  ///
+  /// Defaults to `false`.
+  final bool enforceLeaderWidth;
+
+  /// Whether to enforce the height of the leader widget on the follower widget.
+  ///
+  /// This can be useful to make follower widget be the same height as the leader widget.
+  ///
+  /// Defaults to `false`.
+  final bool enforceLeaderHeight;
+
   @override
   State<Popup> createState() => _PopupState();
 }
@@ -94,14 +109,14 @@ class _PopupState extends State<Popup> {
 
   @override
   void initState() {
-    portalController = widget.controller ?? OverlayPortalController();
+    portalController = widget.controller ?? OverlayPortalController(debugLabel: 'Popup');
     super.initState();
   }
 
   @override
   void didUpdateWidget(covariant Popup oldWidget) {
     if (!identical(widget.controller, oldWidget.controller)) {
-      portalController = widget.controller ?? OverlayPortalController();
+      portalController = widget.controller ?? OverlayPortalController(debugLabel: 'Popup');
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -111,7 +126,7 @@ class _PopupState extends State<Popup> {
         link: _layerLink, // link the target widget to the follower widget.
         child: OverlayPortal(
           controller: portalController,
-          child: widget.child(context, portalController),
+          child: widget.target(context, portalController),
           overlayChildBuilder: (BuildContext context) => FocusScope(
             debugLabel: 'Popup',
             autofocus: true,
@@ -124,6 +139,8 @@ class _PopupState extends State<Popup> {
                 edgePadding: widget.edgeInsets,
                 flip: widget.flip,
                 adjustForOverflow: widget.adjustForOverflow,
+                enforceLeaderWidth: widget.enforceLeaderWidth,
+                enforceLeaderHeight: widget.enforceLeaderHeight,
                 child: Builder(builder: (context) => widget.follower(context, portalController)),
               ),
             ),
@@ -150,6 +167,7 @@ class PopupFollower extends StatelessWidget {
     this.builder,
     this.onDismiss,
     this.tapRegionGroupId,
+    this.consumeOutsideTaps = false,
     super.key,
   }) : assert(child != null || builder != null);
 
@@ -166,6 +184,9 @@ class PopupFollower extends StatelessWidget {
 
   /// The group id of the [TapRegion].
   final Object? tapRegionGroupId;
+
+  /// Whether to consume the outside taps.
+  final bool consumeOutsideTaps;
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +212,9 @@ class PopupFollower extends StatelessWidget {
         child: Focus(
           autofocus: true,
           child: TapRegion(
+            debugLabel: 'PopupFollower',
             groupId: tapRegionGroupId,
+            consumeOutsideTaps: consumeOutsideTaps,
             onTapOutside: (_) => onDismiss?.call(),
             child: child,
           ),

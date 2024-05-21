@@ -1,5 +1,6 @@
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:popup_playground/widgets/enhanced_composited_transform_follower.dart';
 
 /// A link that can be established between a [EnhancedCompositedTransformTarget] and a
 /// [EnhancedCompositedTransformFollower].
@@ -9,7 +10,16 @@ import 'package:flutter/widgets.dart';
 /// object of the leader.
 class EnhancedLayerLink extends LayerLink {
   /// The render object of the leader.
-  RenderBox? leaderRenderObject;
+  EnhancedRenderLeaderLayer? leaderRenderObject;
+
+  /// The render object of the follower.
+  EnhancedRenderFollowerLayer? followerRenderObject;
+
+  /// Callback that is called when the size of the leader changes.
+  void leaderSizeChanged(Size? size) {
+    leaderSize = size;
+    followerRenderObject?.leaderSizeChanged();
+  }
 }
 
 /// A widget that can be targeted by a [CompositedTransformFollower].
@@ -86,11 +96,11 @@ class EnhancedRenderLeaderLayer extends RenderProxyBox {
     if (_link == value) {
       return;
     }
-    _link.leaderSize = null;
+    _link.leaderSizeChanged(null);
     _link = value;
     _link.leaderRenderObject = this;
     if (_previousLayoutSize != null) {
-      _link.leaderSize = _previousLayoutSize;
+      _link.leaderSizeChanged(_previousLayoutSize!);
     }
     markNeedsPaint();
   }
@@ -106,8 +116,10 @@ class EnhancedRenderLeaderLayer extends RenderProxyBox {
   @override
   void performLayout() {
     super.performLayout();
-    _previousLayoutSize = size;
-    link.leaderSize = size;
+    link.leaderSizeChanged(size);
+    if (_previousLayoutSize != size) {
+      _previousLayoutSize = size;
+    }
   }
 
   @override
@@ -125,6 +137,14 @@ class EnhancedRenderLeaderLayer extends RenderProxyBox {
       layer!.debugCreator = debugCreator;
       return true;
     }());
+  }
+
+  @override
+  void detach() {
+    layer = null;
+    link.leaderRenderObject = null;
+    _previousLayoutSize = null;
+    super.detach();
   }
 
   @override

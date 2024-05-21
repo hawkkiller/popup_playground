@@ -45,6 +45,8 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
     this.edgePadding = EdgeInsets.zero,
     this.targetAnchor = Alignment.topLeft,
     this.followerAnchor = Alignment.topLeft,
+    this.enforceLeaderWidth = false,
+    this.enforceLeaderHeight = false,
     this.flip = true,
     this.adjustForOverflow = true,
     super.child,
@@ -109,18 +111,33 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
   /// Defaults to `true`.
   final bool adjustForOverflow;
 
+  /// Whether to enforce the width of the leader widget on the follower widget.
+  ///
+  /// This can be useful to make follower widget be the same width as the leader widget.
+  ///
+  /// Defaults to `false`.
+  final bool enforceLeaderWidth;
+
+  /// Whether to enforce the height of the leader widget on the follower widget.
+  ///
+  /// This can be useful to make follower widget be the same height as the leader widget.
+  ///
+  /// Defaults to `false`.
+  final bool enforceLeaderHeight;
+
   @override
-  EnhancedRenderFollowerLayer createRenderObject(BuildContext context) {
-    return EnhancedRenderFollowerLayer(
-      link: link,
-      showWhenUnlinked: showWhenUnlinked,
-      edgePadding: edgePadding,
-      leaderAnchor: targetAnchor,
-      followerAnchor: followerAnchor,
-      flip: flip,
-      adjustForOverflow: adjustForOverflow,
-    );
-  }
+  EnhancedRenderFollowerLayer createRenderObject(BuildContext context) =>
+      EnhancedRenderFollowerLayer(
+        link: link,
+        showWhenUnlinked: showWhenUnlinked,
+        edgePadding: edgePadding,
+        leaderAnchor: targetAnchor,
+        followerAnchor: followerAnchor,
+        flip: flip,
+        adjustForOverflow: adjustForOverflow,
+        enforceLeaderWidth: enforceLeaderWidth,
+        enforceLeaderHeight: enforceLeaderHeight,
+      );
 
   @override
   void updateRenderObject(BuildContext context, EnhancedRenderFollowerLayer renderObject) {
@@ -130,7 +147,10 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
       ..leaderAnchor = targetAnchor
       ..followerAnchor = followerAnchor
       ..edgePadding = edgePadding
-      ..flip = flip;
+      ..adjustForOverflow = adjustForOverflow
+      ..flip = flip
+      ..enforceLeaderWidth = enforceLeaderWidth
+      ..enforceLeaderHeight = enforceLeaderHeight;
   }
 }
 
@@ -157,6 +177,8 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     EdgeInsets edgePadding = EdgeInsets.zero,
     Alignment leaderAnchor = Alignment.topLeft,
     Alignment followerAnchor = Alignment.topLeft,
+    bool enforceLeaderWidth = false,
+    bool enforceLeaderHeight = false,
     RenderBox? child,
   })  : _link = link,
         _flip = flip,
@@ -165,7 +187,20 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
         _edgePadding = edgePadding,
         _leaderAnchor = leaderAnchor,
         _followerAnchor = followerAnchor,
-        super(child);
+        _enforceLeaderWidth = enforceLeaderWidth,
+        _enforceLeaderHeight = enforceLeaderHeight,
+        super(child) {
+    link.followerRenderObject = this;
+  }
+
+  /// Called when the size of the leader widget changes.
+  void leaderSizeChanged() {
+    if (_enforceLeaderHeight || _enforceLeaderWidth) {
+      RendererBinding.instance.addPostFrameCallback((_) {
+        markNeedsLayout();
+      });
+    }
+  }
 
   /// The link object that connects this [EnhancedRenderFollowerLayer] with a
   /// [RenderLeaderLayer] earlier in the paint order.
@@ -283,9 +318,40 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  /// Whether to enforce the width of the leader widget on the follower widget.
+  ///
+  /// This can be useful to make follower widget be the same width as the leader widget.
+  ///
+  /// Defaults to `false`.
+  bool get enforceLeaderWidth => _enforceLeaderWidth;
+  bool _enforceLeaderWidth;
+  set enforceLeaderWidth(bool value) {
+    if (_enforceLeaderWidth == value) {
+      return;
+    }
+    _enforceLeaderWidth = value;
+    markNeedsPaint();
+  }
+
+  /// Whether to enforce the height of the leader widget on the follower widget.
+  ///
+  /// This can be useful to make follower widget be the same height as the leader widget.
+  ///
+  /// Defaults to `false`.
+  bool get enforceLeaderHeight => _enforceLeaderHeight;
+  bool _enforceLeaderHeight;
+  set enforceLeaderHeight(bool value) {
+    if (_enforceLeaderHeight == value) {
+      return;
+    }
+    _enforceLeaderHeight = value;
+    markNeedsPaint();
+  }
+
   @override
   void detach() {
     layer = null;
+    link.followerRenderObject = null;
     super.detach();
   }
 
@@ -332,7 +398,26 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
 
   @override
   void performLayout() {
-    final constraints = this.constraints.deflate(edgePadding);
+    var constraints = this.constraints.deflate(edgePadding);
+
+    // use leader size if enforceLeaderWidth or enforceLeaderHeight is true
+    final leaderSize = link.leaderSize;
+
+    if (leaderSize != null) {
+      if (enforceLeaderWidth) {
+        constraints = constraints.copyWith(
+          minWidth: leaderSize.width,
+          maxWidth: leaderSize.width,
+        );
+      }
+
+      if (enforceLeaderHeight) {
+        constraints = constraints.copyWith(
+          minHeight: leaderSize.height,
+          maxHeight: leaderSize.height,
+        );
+      }
+    }
 
     size = (child?..layout(constraints, parentUsesSize: true))?.size ??
         computeSizeForNoChild(constraints);

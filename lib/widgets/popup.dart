@@ -185,9 +185,13 @@ class PopupFollower extends StatefulWidget {
   final VoidCallback? onDismiss;
 
   /// The group id of the [TapRegion].
+  /// 
+  /// Refers to the [TapRegion.groupId].
   final Object? tapRegionGroupId;
 
   /// Whether to consume the outside taps.
+  /// 
+  /// Refers to the [TapRegion.consumeOutsideTaps].
   final bool consumeOutsideTaps;
 
   /// Whether to dismiss the popup when the window is resized.

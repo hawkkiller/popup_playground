@@ -158,7 +158,7 @@ typedef PopupFollowerBuilder = Widget Function(BuildContext context, Widget? chi
 /// It listens for the escape key and dismisses the popup when pressed.
 /// It also listens for the tap outside the child widget and dismisses the popup.
 /// {@endtemplate}
-class PopupFollower extends StatelessWidget {
+class PopupFollower extends StatefulWidget {
   /// Creates a new instance of [PopupFollower].
   ///
   /// {@macro popup_follower}
@@ -168,6 +168,8 @@ class PopupFollower extends StatelessWidget {
     this.onDismiss,
     this.tapRegionGroupId,
     this.consumeOutsideTaps = false,
+    this.dismissOnResize = false,
+    this.dismissOnScroll = true,
     super.key,
   }) : assert(child != null || builder != null);
 
@@ -188,38 +190,112 @@ class PopupFollower extends StatelessWidget {
   /// Whether to consume the outside taps.
   final bool consumeOutsideTaps;
 
+  /// Whether to dismiss the popup when the window is resized.
+  final bool dismissOnResize;
+
+  /// Whether to dismiss the popup when the scroll occurs.
+  final bool dismissOnScroll;
+
+  @override
+  State<PopupFollower> createState() => _PopupFollowerState();
+}
+
+class _PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserver {
+  late final isRoot = FollowerScope.maybeOf(context) == null;
+  ScrollPosition? _scrollPosition;
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _scrollPosition?.removeListener(_scrollableListener);
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    _scrollPosition?.removeListener(_scrollableListener);
+    _scrollPosition = Scrollable.maybeOf(context)?.position?..addListener(_scrollableListener);
+    super.didChangeDependencies();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (widget.dismissOnResize) {
+      widget.onDismiss?.call();
+    }
+    super.didChangeMetrics();
+  }
+
+  void _scrollableListener() {
+    if (widget.onDismiss != null && widget.dismissOnScroll && isRoot) {
+      widget.onDismiss?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget? child;
 
-    if (builder != null) {
-      child = builder!(context, this.child);
+    if (widget.builder != null) {
+      child = widget.builder!(context, widget.child);
     } else {
-      child = this.child;
+      child = widget.child;
     }
 
-    return Actions(
-      actions: {
-        DismissIntent: CallbackAction<DismissIntent>(
-          onInvoke: (intent) => onDismiss?.call(),
-        ),
-      },
-      child: Shortcuts(
-        debugLabel: 'PopupFollower',
-        shortcuts: {
-          LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
+    return FollowerScope(
+      state: this,
+      child: Actions(
+        actions: {
+          DismissIntent: CallbackAction<DismissIntent>(
+            onInvoke: (intent) => widget.onDismiss?.call(),
+          ),
         },
-        child: Focus(
-          autofocus: true,
-          child: TapRegion(
-            debugLabel: 'PopupFollower',
-            groupId: tapRegionGroupId,
-            consumeOutsideTaps: consumeOutsideTaps,
-            onTapOutside: (_) => onDismiss?.call(),
-            child: child,
+        child: Shortcuts(
+          debugLabel: 'PopupFollower',
+          shortcuts: {
+            LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
+          },
+          child: Focus(
+            autofocus: true,
+            child: TapRegion(
+              debugLabel: 'PopupFollower',
+              groupId: widget.tapRegionGroupId,
+              consumeOutsideTaps: widget.consumeOutsideTaps,
+              onTapOutside: (_) => widget.onDismiss?.call(),
+              child: child,
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+/// Follower Scope
+class FollowerScope extends InheritedWidget {
+  /// Creates a new instance of [FollowerScope].
+  const FollowerScope({
+    required super.child,
+    required this.state,
+    super.key,
+  });
+
+  final _PopupFollowerState state;
+
+  /// Returns the closest [FollowerScope] instance.
+  static FollowerScope? maybeOf(BuildContext context, {bool listen = false}) {
+    return listen
+        ? context.dependOnInheritedWidgetOfExactType<FollowerScope>()
+        : context.getElementForInheritedWidgetOfExactType<FollowerScope>()?.widget
+            as FollowerScope?;
+  }
+
+  @override
+  bool updateShouldNotify(FollowerScope oldWidget) => false;
 }

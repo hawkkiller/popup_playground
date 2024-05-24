@@ -27,8 +27,8 @@ class Popup extends StatefulWidget {
   ///
   /// {@macro popup}
   const Popup({
-    required this.target,
     required this.follower,
+    required this.child,
     this.controller,
     this.flip = true,
     this.adjustForOverflow = true,
@@ -41,7 +41,7 @@ class Popup extends StatefulWidget {
   });
 
   /// The target widget that the follower widget is positioned relative to.
-  final PopupWidgetBuilder target;
+  final PopupWidgetBuilder child;
 
   /// The widget that is positioned relative to the target widget.
   final PopupWidgetBuilder follower;
@@ -126,7 +126,7 @@ class _PopupState extends State<Popup> {
         link: _layerLink, // link the target widget to the follower widget.
         child: OverlayPortal(
           controller: portalController,
-          child: widget.target(context, portalController),
+          child: widget.child(context, portalController),
           overlayChildBuilder: (BuildContext context) => FocusScope(
             debugLabel: 'Popup',
             autofocus: true,
@@ -170,6 +170,7 @@ class PopupFollower extends StatefulWidget {
     this.consumeOutsideTaps = false,
     this.dismissOnResize = false,
     this.dismissOnScroll = true,
+    this.constraints = const BoxConstraints(),
     super.key,
   }) : assert(child != null || builder != null);
 
@@ -184,13 +185,16 @@ class PopupFollower extends StatefulWidget {
   /// If this callback is not provided, the popup will not be dismissible.
   final VoidCallback? onDismiss;
 
+  /// Follower constraints, if any.
+  final BoxConstraints constraints;
+
   /// The group id of the [TapRegion].
-  /// 
+  ///
   /// Refers to the [TapRegion.groupId].
   final Object? tapRegionGroupId;
 
   /// Whether to consume the outside taps.
-  /// 
+  ///
   /// Refers to the [TapRegion.consumeOutsideTaps].
   final bool consumeOutsideTaps;
 
@@ -201,11 +205,11 @@ class PopupFollower extends StatefulWidget {
   final bool dismissOnScroll;
 
   @override
-  State<PopupFollower> createState() => _PopupFollowerState();
+  State<PopupFollower> createState() => PopupFollowerState();
 }
 
-class _PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserver {
-  late final isRoot = FollowerScope.maybeOf(context) == null;
+class PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserver {
+  late final isRoot = context.findRootAncestorStateOfType<PopupFollowerState>() == null;
   ScrollPosition? _scrollPosition;
 
   @override
@@ -242,6 +246,12 @@ class _PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserv
     }
   }
 
+  void dismiss() {
+    if (widget.onDismiss != null && isRoot) {
+      widget.onDismiss?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget? child;
@@ -272,7 +282,10 @@ class _PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserv
               groupId: widget.tapRegionGroupId,
               consumeOutsideTaps: widget.consumeOutsideTaps,
               onTapOutside: (_) => widget.onDismiss?.call(),
-              child: child,
+              child: ConstrainedBox(
+                constraints: widget.constraints,
+                child: child,
+              ),
             ),
           ),
         ),
@@ -290,7 +303,7 @@ class FollowerScope extends InheritedWidget {
     super.key,
   });
 
-  final _PopupFollowerState state;
+  final PopupFollowerState state;
 
   /// Returns the closest [FollowerScope] instance.
   static FollowerScope? maybeOf(BuildContext context, {bool listen = false}) {

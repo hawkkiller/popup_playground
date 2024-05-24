@@ -91,6 +91,20 @@ class _CustomPopupsShowcaseState extends State<CustomPopupsShowcase> {
             ),
           ),
         ),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: 700,
+            child: WidgetWithDescription(
+              title: 'Menu with Submenus',
+              description: 'A popup that shows a menu with a submenu. '
+                  'The submenu is shown when hovering over the menu item.',
+              expanded: expanded,
+              child: const MenuWithSubmenuPopup(),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -102,7 +116,7 @@ class _BasicPopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Popup(
-      target: (context, controller) => FilledButton(
+      child: (context, controller) => FilledButton(
         onPressed: () => controller.show(),
         child: const Text('Show Simple Popup'),
       ),
@@ -152,7 +166,7 @@ class _CustomAnchorPopup extends StatelessWidget {
   Widget build(BuildContext context) => Popup(
         targetAnchor: Alignment.centerRight,
         followerAnchor: Alignment.centerLeft,
-        target: (context, controller) => FilledButton(
+        child: (context, controller) => FilledButton(
           onPressed: () => controller.show(),
           child: const Text('Show Popup with Custom Anchor'),
         ),
@@ -202,7 +216,7 @@ class _DismissiblePopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Popup(
-        target: (context, controller) => TapRegion(
+        child: (context, controller) => TapRegion(
           groupId: 'ClosesPopup',
           child: FilledButton(
             onPressed: () => controller.show(),
@@ -295,7 +309,7 @@ class _CountryPickerPopupState extends State<_CountryPickerPopup>
         followerAnchor: Alignment.topCenter,
         enforceLeaderWidth: true,
         controller: popupController,
-        target: (context, controller) => SizedBox(
+        child: (context, controller) => SizedBox(
           width: 200,
           child: TextField(
             controller: textController,
@@ -344,5 +358,147 @@ class _CountryPickerPopupState extends State<_CountryPickerPopup>
                 ),
               );
             }),
+      );
+}
+
+class MenuWithSubmenuPopup extends StatelessWidget {
+  const MenuWithSubmenuPopup({super.key});
+
+  @override
+  Widget build(BuildContext context) => Popup(
+    flip: false,
+        follower: (context, controller) => _MenuItemPopup(controller: controller),
+        child: (context, controller) => TapRegion(
+          groupId: 'menupopup',
+          child: FilledButton(
+            onPressed: controller.show,
+            child: const Text('Show Menu'),
+          ),
+        ),
+      );
+}
+
+class _MenuItemPopup extends StatelessWidget {
+  const _MenuItemPopup({
+    required this.controller,
+  });
+
+  final OverlayPortalController controller;
+
+  @override
+  Widget build(BuildContext context) => PopupFollower(
+        constraints: BoxConstraints.loose(const Size(200, 200)),
+        tapRegionGroupId: 'menupopup',
+        onDismiss: controller.hide,
+        child: const Card.filled(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MenuPopupSection(),
+              _MenuPopupSection(),
+              _MenuPopupSection(),
+            ],
+          ),
+        ),
+      );
+}
+
+class _MenuPopupSection extends StatefulWidget {
+  const _MenuPopupSection();
+
+  @override
+  State<_MenuPopupSection> createState() => _MenuPopupSectionState();
+}
+
+class _MenuPopupSectionState extends State<_MenuPopupSection> {
+  bool isMenuItemHovered = false;
+  bool isSubmenuHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Popup(
+      targetAnchor: Alignment.centerRight,
+      followerAnchor: Alignment.centerLeft,
+      follower: (context, controller) => MouseRegion(
+        onEnter: (_) {
+          isMenuItemHovered = true;
+          controller.show();
+        },
+        onExit: (_) {
+          isSubmenuHovered = false;
+          controller.hide();
+        },
+        child: _Submenus(
+          controller: controller,
+          options: const [
+            'Submenu Item',
+            'Submenu Item',
+            'Submenu Item',
+          ],
+        ),
+      ),
+      child: (context, controller) => MouseRegion(
+        onEnter: (_) {
+          isMenuItemHovered = true;
+          controller.show();
+        },
+        onExit: (_) {
+          if (!isSubmenuHovered) {
+            controller.hide();
+          }
+        },
+        onHover: (_) => controller.show(),
+        child: ListTile(
+          title: const Text('Menu Item'),
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+            Radius.circular(8),
+          )),
+          onTap: controller.show,
+        ),
+      ),
+    );
+  }
+}
+
+class _Submenus extends StatefulWidget {
+  const _Submenus({
+    required this.options,
+    required this.controller,
+  });
+
+  final List<String> options;
+  final OverlayPortalController controller;
+
+  @override
+  State<_Submenus> createState() => _SubmenusState();
+}
+
+class _SubmenusState extends State<_Submenus> {
+  void _onPressed() {
+    context.findAncestorStateOfType<PopupFollowerState>()?.dismiss();
+
+    widget.controller.hide();
+  }
+
+  @override
+  Widget build(BuildContext context) => PopupFollower(
+        constraints: BoxConstraints.loose(const Size(200, 200)),
+        tapRegionGroupId: 'menupopup',
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final option in widget.options)
+                  ListTile(
+                    title: Text(option),
+                    onTap: _onPressed,
+                  ),
+              ],
+            ),
+          ),
+        ),
       );
 }

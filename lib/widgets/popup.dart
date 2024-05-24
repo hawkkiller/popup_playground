@@ -152,6 +152,12 @@ class _PopupState extends State<Popup> {
 /// Follower builder that wraps the child widget.
 typedef PopupFollowerBuilder = Widget Function(BuildContext context, Widget? child);
 
+/// Handles for follower widgets.
+abstract interface class PopupFollowerController {
+  /// Dismisses the popup.
+  void dismiss();
+}
+
 /// {@template popup_follower}
 /// A widget that adds additional functionality to the child widget.
 ///
@@ -208,8 +214,10 @@ class PopupFollower extends StatefulWidget {
   State<PopupFollower> createState() => PopupFollowerState();
 }
 
-class PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserver {
-  late final isRoot = context.findRootAncestorStateOfType<PopupFollowerState>() == null;
+class PopupFollowerState extends State<PopupFollower>
+    with WidgetsBindingObserver
+    implements PopupFollowerController {
+  late final isRoot = FollowerScope.maybeOf(context) == null;
   ScrollPosition? _scrollPosition;
 
   @override
@@ -246,6 +254,7 @@ class PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserve
     }
   }
 
+  @override
   void dismiss() {
     if (widget.onDismiss != null && isRoot) {
       widget.onDismiss?.call();
@@ -263,7 +272,8 @@ class PopupFollowerState extends State<PopupFollower> with WidgetsBindingObserve
     }
 
     return FollowerScope(
-      state: this,
+      controller: this,
+      parent: FollowerScope.maybeOf(context, listen: true),
       child: Actions(
         actions: {
           DismissIntent: CallbackAction<DismissIntent>(
@@ -299,11 +309,13 @@ class FollowerScope extends InheritedWidget {
   /// Creates a new instance of [FollowerScope].
   const FollowerScope({
     required super.child,
-    required this.state,
+    required this.controller,
+    this.parent,
     super.key,
   });
 
-  final PopupFollowerState state;
+  final PopupFollowerController controller;
+  final FollowerScope? parent;
 
   /// Returns the closest [FollowerScope] instance.
   static FollowerScope? maybeOf(BuildContext context, {bool listen = false}) {
@@ -311,6 +323,15 @@ class FollowerScope extends InheritedWidget {
         ? context.dependOnInheritedWidgetOfExactType<FollowerScope>()
         : context.getElementForInheritedWidgetOfExactType<FollowerScope>()?.widget
             as FollowerScope?;
+  }
+
+  /// Returns the root [FollowerScope] instance.
+  static FollowerScope? findRootOf(BuildContext context, {bool listen = false}) {
+    var scope = maybeOf(context, listen: listen);
+    while (scope?.parent != null) {
+      scope = scope?.parent;
+    }
+    return scope;
   }
 
   @override

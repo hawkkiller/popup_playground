@@ -333,26 +333,30 @@ class _CountryPickerPopupState extends State<_CountryPickerPopup>
               return PopupFollower(
                 onDismiss: controller.hide,
                 child: SizedBox(
-                  width: 200,
-                  height: 100,
+                  height: 150,
                   child: Card(
-                    margin: EdgeInsets.zero,
-                    child: ListView.builder(
-                      itemCount: filteredCountries.length,
-                      itemBuilder: (context, index) {
-                        final country = filteredCountries[index];
+                    child: Visibility(
+                      visible: filteredCountries.isNotEmpty,
+                      replacement: const Center(
+                        child: Text('No countries found ☹️'),
+                      ),
+                      child: ListView.builder(
+                        itemCount: filteredCountries.length,
+                        itemBuilder: (context, index) {
+                          final country = filteredCountries[index];
 
-                        return ListTile(
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                          ),
-                          title: Text(country.name),
-                          onTap: () {
-                            textController.text = country.name;
-                            controller.hide();
-                          },
-                        );
-                      },
+                          return ListTile(
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(8)),
+                            ),
+                            title: Text(country.name),
+                            onTap: () {
+                              textController.text = country.name;
+                              controller.hide();
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -366,7 +370,7 @@ class MenuWithSubmenuPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Popup(
-    flip: false,
+        flip: false,
         follower: (context, controller) => _MenuItemPopup(controller: controller),
         child: (context, controller) => TapRegion(
           groupId: 'menupopup',
@@ -476,7 +480,7 @@ class _Submenus extends StatefulWidget {
 
 class _SubmenusState extends State<_Submenus> {
   void _onPressed() {
-    context.findAncestorStateOfType<PopupFollowerState>()?.dismiss();
+    FollowerScope.findRootOf(context)?.controller.dismiss();
 
     widget.controller.hide();
   }

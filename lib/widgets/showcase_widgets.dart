@@ -43,9 +43,8 @@ class WidgetWithDescription extends StatelessWidget {
             builder: (context) {
               if (expanded) {
                 return Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,

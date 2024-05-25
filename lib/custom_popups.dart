@@ -20,20 +20,10 @@ class _CustomPopupsShowcaseState extends State<CustomPopupsShowcase> {
       children: [
         Text('Custom Popups', style: textTheme.headlineLarge),
         const SizedBox(height: 8),
-        Text.rich(
-          TextSpan(
-            style: textTheme.bodyLarge,
-            children: const [
-              TextSpan(
-                text: "This section showcases custom popups I've built using "
-                    "Popup widget. ",
-              ),
-              TextSpan(
-                text: "The Popup widget is a simple widget "
-                    "that allows you to show a popup anchored to a widget.",
-              ),
-            ],
-          ),
+        Text(
+          'This section showcases custom popups that can be created using the Popup widget. '
+          'Popup is a versatile widget that can be used to create custom popups with ease. ',
+          style: textTheme.bodyLarge,
         ),
         const SizedBox(height: 16),
         Align(
@@ -105,7 +95,156 @@ class _CustomPopupsShowcaseState extends State<CustomPopupsShowcase> {
             ),
           ),
         ),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: 700,
+            child: WidgetWithDescription(
+              title: 'Simple Tooltip',
+              description: 'A simple tooltip that shows when hovering over a widget on desktop. '
+                  'However, on mobile, it will show when tapping on the widget.',
+              expanded: expanded,
+              child: const TooltipPopup(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: 700,
+            child: WidgetWithDescription(
+              title: 'Animated Tooltip',
+              description: 'The same tooltip as the simple tooltip but with an animation '
+                  'when showing and hiding the tooltip. '
+                  'This approach may be used in other custom popups to add animations.',
+              expanded: expanded,
+              child: const AnimatedTooltip(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Possibilities are endless with the Popup widget.',
+          style: textTheme.titleLarge,
+        ),
       ],
+    );
+  }
+}
+
+class AnimatedTooltip extends StatefulWidget {
+  const AnimatedTooltip({super.key});
+
+  @override
+  State<AnimatedTooltip> createState() => _AnimatedTooltipState();
+}
+
+class _AnimatedTooltipState extends State<AnimatedTooltip> with SingleTickerProviderStateMixin {
+  final popupController = OverlayPortalController();
+  late final _animationController =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+
+  void _show() {
+    _animationController.forward();
+    popupController.show();
+  }
+
+  void _hide() {
+    _animationController.reverse().whenCompleteOrCancel(() {
+      popupController.hide();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Popup(
+      controller: popupController,
+      targetAnchor: Alignment.bottomCenter,
+      followerAnchor: Alignment.topCenter,
+      child: (context, controller) => MouseRegion(
+        onEnter: (_) => _show(),
+        onExit: (_) => _hide(),
+        child: TapRegion(
+          groupId: 'tooltip',
+          child: IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () => controller.isShowing ? _hide() : _show(),
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+        ),
+      ),
+      follower: (context, controller) => PopupFollower(
+        tapRegionGroupId: 'tooltip',
+        onDismiss: () => _hide(),
+        child: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) => FadeTransition(
+            opacity: _animationController,
+            child: SizedBox(
+              width: 300,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(
+                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+                    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class TooltipPopup extends StatelessWidget {
+  const TooltipPopup({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Popup(
+      targetAnchor: Alignment.bottomCenter,
+      followerAnchor: Alignment.topCenter,
+      child: (context, controller) => MouseRegion(
+        onEnter: (_) {
+          controller.show();
+        },
+        onExit: (_) {
+          controller.hide();
+        },
+        child: TapRegion(
+          groupId: 'tooltip',
+          child: IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () => controller.isShowing ? controller.hide() : controller.show(),
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+        ),
+      ),
+      follower: (context, controller) => PopupFollower(
+        tapRegionGroupId: 'tooltip',
+        onDismiss: controller.hide,
+        child: SizedBox(
+          width: 300,
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+                'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

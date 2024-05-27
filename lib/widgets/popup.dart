@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:popup_playground/widgets/enhanced_composited_transform_follower.dart';
 import 'package:popup_playground/widgets/enhanced_composited_transform_target.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A function that builds a widget with a controller.
 typedef PopupWidgetBuilder = Widget Function(
@@ -177,6 +177,7 @@ class PopupFollower extends StatefulWidget {
     this.dismissOnResize = false,
     this.dismissOnScroll = true,
     this.constraints = const BoxConstraints(),
+    this.autofocus = false,
     super.key,
   }) : assert(child != null || builder != null);
 
@@ -209,6 +210,9 @@ class PopupFollower extends StatefulWidget {
 
   /// Whether to dismiss the popup when the scroll occurs.
   final bool dismissOnScroll;
+
+  /// Whether the focus should be set to the child widget.
+  final bool autofocus;
 
   @override
   State<PopupFollower> createState() => PopupFollowerState();
@@ -286,7 +290,7 @@ class PopupFollowerState extends State<PopupFollower>
             LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
           },
           child: Focus(
-            autofocus: true,
+            autofocus: widget.autofocus,
             child: TapRegion(
               debugLabel: 'PopupFollower',
               groupId: widget.tapRegionGroupId,

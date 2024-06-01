@@ -469,10 +469,13 @@ class _CountryPickerPopupState extends State<_CountryPickerPopup>
                         ),
                   )
                   .toList();
+              
+              final enableShrinkWrap = filteredCountries.length < 4;
+
               return PopupFollower(
                 onDismiss: controller.hide,
                 child: SizedBox(
-                  height: 150,
+                  height: enableShrinkWrap ? null : 200,
                   child: Card(
                     child: Visibility(
                       visible: filteredCountries.isNotEmpty,
@@ -480,6 +483,7 @@ class _CountryPickerPopupState extends State<_CountryPickerPopup>
                         child: Text('No countries found ☹️'),
                       ),
                       child: ListView.builder(
+                        shrinkWrap: enableShrinkWrap,
                         itemCount: filteredCountries.length,
                         itemBuilder: (context, index) {
                           final country = filteredCountries[index];

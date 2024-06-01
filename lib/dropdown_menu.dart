@@ -62,6 +62,18 @@ class DropdownMenuShowcase extends StatelessWidget {
               ],
             ),
           ),
+          WidgetWithTitle(
+            title: 'Without focus on tap',
+            child: DropdownMenu(
+              requestFocusOnTap: false,
+              leadingIcon: Icon(Icons.search),
+              dropdownMenuEntries: [
+                DropdownMenuEntry(label: 'Aaaaaa', value: '1'),
+                DropdownMenuEntry(label: 'Bbbbbb', value: '2'),
+                DropdownMenuEntry(label: 'Cccccc', value: '3'),
+              ],
+            ),
+          ),
         ],
       ),
     ]);

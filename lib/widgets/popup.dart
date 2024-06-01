@@ -293,19 +293,22 @@ class PopupFollowerState extends State<PopupFollower>
           shortcuts: {
             LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
           },
-          child: FocusScope(
-            debugLabel: 'PopupFollower',
-            node: widget.focusScopeNode,
-            skipTraversal: widget.skipTraversal,
-            autofocus: widget.autofocus,
-            child: TapRegion(
+          child: Semantics(
+            container: true,
+            child: FocusScope(
               debugLabel: 'PopupFollower',
-              groupId: widget.tapRegionGroupId,
-              consumeOutsideTaps: widget.consumeOutsideTaps,
-              onTapOutside: (_) => widget.onDismiss?.call(),
-              child: ConstrainedBox(
-                constraints: widget.constraints,
-                child: child,
+              node: widget.focusScopeNode,
+              skipTraversal: widget.skipTraversal,
+              autofocus: widget.autofocus,
+              child: TapRegion(
+                debugLabel: 'PopupFollower',
+                groupId: widget.tapRegionGroupId,
+                consumeOutsideTaps: widget.consumeOutsideTaps,
+                onTapOutside: (_) => widget.onDismiss?.call(),
+                child: ConstrainedBox(
+                  constraints: widget.constraints,
+                  child: child,
+                ),
               ),
             ),
           ),

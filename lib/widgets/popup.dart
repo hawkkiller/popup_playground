@@ -127,22 +127,18 @@ class _PopupState extends State<Popup> {
         child: OverlayPortal(
           controller: portalController,
           child: widget.child(context, portalController),
-          overlayChildBuilder: (BuildContext context) => FocusScope(
-            debugLabel: 'Popup',
-            autofocus: true,
-            child: Center(
-              child: EnhancedCompositedTransformFollower(
-                link: _layerLink, // link the follower widget to the target widget.
-                showWhenUnlinked: false, // don't show the follower widget when unlinked.
-                followerAnchor: widget.followerAnchor,
-                targetAnchor: widget.targetAnchor,
-                edgePadding: widget.edgeInsets,
-                flip: widget.flip,
-                adjustForOverflow: widget.adjustForOverflow,
-                enforceLeaderWidth: widget.enforceLeaderWidth,
-                enforceLeaderHeight: widget.enforceLeaderHeight,
-                child: Builder(builder: (context) => widget.follower(context, portalController)),
-              ),
+          overlayChildBuilder: (BuildContext context) => Center(
+            child: EnhancedCompositedTransformFollower(
+              link: _layerLink, // link the follower widget to the target widget.
+              showWhenUnlinked: false, // don't show the follower widget when unlinked.
+              followerAnchor: widget.followerAnchor,
+              targetAnchor: widget.targetAnchor,
+              edgePadding: widget.edgeInsets,
+              flip: widget.flip,
+              adjustForOverflow: widget.adjustForOverflow,
+              enforceLeaderWidth: widget.enforceLeaderWidth,
+              enforceLeaderHeight: widget.enforceLeaderHeight,
+              child: Builder(builder: (context) => widget.follower(context, portalController)),
             ),
           ),
         ),
@@ -173,6 +169,8 @@ class PopupFollower extends StatefulWidget {
     this.builder,
     this.onDismiss,
     this.tapRegionGroupId,
+    this.focusScopeNode,
+    this.skipTraversal,
     this.consumeOutsideTaps = false,
     this.dismissOnResize = false,
     this.dismissOnScroll = true,
@@ -213,6 +211,12 @@ class PopupFollower extends StatefulWidget {
 
   /// Whether the focus should be set to the child widget.
   final bool autofocus;
+
+  /// The focus scope node.
+  final FocusScopeNode? focusScopeNode;
+
+  /// Whether to skip the focus traversal.
+  final bool? skipTraversal;
 
   @override
   State<PopupFollower> createState() => PopupFollowerState();
@@ -289,7 +293,10 @@ class PopupFollowerState extends State<PopupFollower>
           shortcuts: {
             LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
           },
-          child: Focus(
+          child: FocusScope(
+            debugLabel: 'PopupFollower',
+            node: widget.focusScopeNode,
+            skipTraversal: widget.skipTraversal,
             autofocus: widget.autofocus,
             child: TapRegion(
               debugLabel: 'PopupFollower',

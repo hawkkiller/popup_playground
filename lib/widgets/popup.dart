@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:popup_playground/widgets/enhanced_composited_transform_follower.dart';
 import 'package:popup_playground/widgets/enhanced_composited_transform_target.dart';
 import 'package:flutter/material.dart';
@@ -96,6 +98,17 @@ class Popup extends StatefulWidget {
   /// Defaults to `false`.
   final bool enforceLeaderHeight;
 
+  /// Returns the areas of the screen that are obstructed by display features.
+  ///
+  /// A [DisplayFeature] obstructs the screen when the area it occupies is
+  /// not 0 or the `state` is [DisplayFeatureState.postureHalfOpened].
+  static Iterable<Rect> findDisplayFeatureBounds(List<DisplayFeature> features) {
+    return features
+        .where((DisplayFeature d) =>
+            d.bounds.shortestSide > 0 || d.state == DisplayFeatureState.postureHalfOpened)
+        .map((DisplayFeature d) => d.bounds);
+  }
+
   @override
   State<Popup> createState() => _PopupState();
 }
@@ -122,27 +135,34 @@ class _PopupState extends State<Popup> {
   }
 
   @override
-  Widget build(BuildContext context) => EnhancedCompositedTransformTarget(
-        link: _layerLink, // link the target widget to the follower widget.
-        child: OverlayPortal(
-          controller: portalController,
-          child: widget.child(context, portalController),
-          overlayChildBuilder: (BuildContext context) => Center(
-            child: EnhancedCompositedTransformFollower(
-              link: _layerLink, // link the follower widget to the target widget.
-              showWhenUnlinked: false, // don't show the follower widget when unlinked.
-              followerAnchor: widget.followerAnchor,
-              targetAnchor: widget.targetAnchor,
-              edgePadding: widget.edgeInsets,
-              flip: widget.flip,
-              adjustForOverflow: widget.adjustForOverflow,
-              enforceLeaderWidth: widget.enforceLeaderWidth,
-              enforceLeaderHeight: widget.enforceLeaderHeight,
-              child: Builder(builder: (context) => widget.follower(context, portalController)),
-            ),
+  Widget build(BuildContext context) {
+    final displayFeatureBounds = Popup.findDisplayFeatureBounds(
+      MediaQuery.displayFeaturesOf(context),
+    );
+
+    return EnhancedCompositedTransformTarget(
+      link: _layerLink, // link the target widget to the follower widget.
+      child: OverlayPortal(
+        controller: portalController,
+        child: widget.child(context, portalController),
+        overlayChildBuilder: (BuildContext context) => Center(
+          child: EnhancedCompositedTransformFollower(
+            link: _layerLink, // link the follower widget to the target widget.
+            showWhenUnlinked: false, // don't show the follower widget when unlinked.
+            followerAnchor: widget.followerAnchor,
+            targetAnchor: widget.targetAnchor,
+            edgePadding: widget.edgeInsets,
+            flip: widget.flip,
+            adjustForOverflow: widget.adjustForOverflow,
+            enforceLeaderWidth: widget.enforceLeaderWidth,
+            enforceLeaderHeight: widget.enforceLeaderHeight,
+            displayFeatureBounds: displayFeatureBounds,
+            child: Builder(builder: (context) => widget.follower(context, portalController)),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 /// Follower builder that wraps the child widget.

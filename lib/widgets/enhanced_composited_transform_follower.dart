@@ -41,6 +41,7 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
   /// The [showWhenUnlinked] and [edgePadding] properties must also not be null.
   const EnhancedCompositedTransformFollower({
     required this.link,
+    required this.displayFeatureBounds,
     this.showWhenUnlinked = true,
     this.edgePadding = EdgeInsets.zero,
     this.targetAnchor = Alignment.topLeft,
@@ -125,6 +126,9 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
   /// Defaults to `false`.
   final bool enforceLeaderHeight;
 
+  /// List of rects that may be obstructed by physical features.
+  final Iterable<Rect> displayFeatureBounds;
+
   @override
   EnhancedRenderFollowerLayer createRenderObject(BuildContext context) =>
       EnhancedRenderFollowerLayer(
@@ -137,6 +141,7 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
         adjustForOverflow: adjustForOverflow,
         enforceLeaderWidth: enforceLeaderWidth,
         enforceLeaderHeight: enforceLeaderHeight,
+        displayFeatureBounds: displayFeatureBounds,
       );
 
   @override
@@ -150,7 +155,8 @@ class EnhancedCompositedTransformFollower extends SingleChildRenderObjectWidget 
       ..adjustForOverflow = adjustForOverflow
       ..flip = flip
       ..enforceLeaderWidth = enforceLeaderWidth
-      ..enforceLeaderHeight = enforceLeaderHeight;
+      ..enforceLeaderHeight = enforceLeaderHeight
+      ..displayFeatureBounds = displayFeatureBounds;
   }
 }
 
@@ -171,6 +177,7 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
   /// Creates a render object that uses a [EnhancedFollowerLayer].
   EnhancedRenderFollowerLayer({
     required EnhancedLayerLink link,
+    required Iterable<Rect> displayFeatureBounds,
     bool showWhenUnlinked = true,
     bool flip = true,
     bool adjustForOverflow = true,
@@ -189,6 +196,7 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
         _followerAnchor = followerAnchor,
         _enforceLeaderWidth = enforceLeaderWidth,
         _enforceLeaderHeight = enforceLeaderHeight,
+        _displayFeatureBounds = displayFeatureBounds,
         super(child) {
     link.followerRenderObject = this;
   }
@@ -200,6 +208,17 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
         markNeedsLayout();
       });
     }
+  }
+
+  /// List of rects that may be obstructed by physical features.
+  Iterable<Rect> get displayFeatureBounds => _displayFeatureBounds;
+  Iterable<Rect> _displayFeatureBounds;
+  set displayFeatureBounds(Iterable<Rect> value) {
+    if (_displayFeatureBounds == value) {
+      return;
+    }
+    _displayFeatureBounds = value;
+    markNeedsPaint();
   }
 
   /// The link object that connects this [EnhancedRenderFollowerLayer] with a
@@ -432,30 +451,30 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
       'leaderSize is required when leaderAnchor is not Alignment.topLeft '
       '(current value is $leaderAnchor).',
     );
+    final overlayRect = Offset.zero & constraints.biggest;
     // If the leader is not linked, and we're not supposed to show anything
     final unlinkedOffset = offset;
 
     final leaderGlobalPosition = link.leaderRenderObject!.localToGlobal(Offset.zero);
     final leaderSize = link.leaderSize!;
 
+    final Iterable<Rect> subScreens = DisplayFeatureSubScreen.subScreensInBounds(
+      overlayRect,
+      displayFeatureBounds,
+    );
+
+    // TODO(mlazebny): figure out how to correctly treat allowedRect
+    // ignore: unused_local_variable
+    final Rect allowedRect = _closestScreen(subScreens, leaderGlobalPosition);
+
     final followerRelativeOffset =
         leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size);
     final followerGlobalPosition = leaderGlobalPosition + followerRelativeOffset;
 
-    final linkedOffset = adjustForOverflow
+    final Offset adjustedLinkedOffset = adjustForOverflow
         ? _adjustOverflow(
-              followerRect: Rect.fromLTWH(
-                followerGlobalPosition.dx,
-                followerGlobalPosition.dy,
-                size.width,
-                size.height,
-              ),
-              targetRect: Rect.fromLTWH(
-                leaderGlobalPosition.dx,
-                leaderGlobalPosition.dy,
-                leaderSize.width,
-                leaderSize.height,
-              ),
+              followerRect: followerGlobalPosition & size,
+              targetRect: leaderGlobalPosition & leaderSize,
               screenSize: constraints.biggest,
               edgePadding: edgePadding,
               flip: flip,
@@ -467,14 +486,14 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
       layer = FollowerLayer(
         link: link,
         showWhenUnlinked: showWhenUnlinked,
-        linkedOffset: linkedOffset,
+        linkedOffset: adjustedLinkedOffset,
         unlinkedOffset: unlinkedOffset,
       );
     } else {
       layer
         ?..link = link
         ..showWhenUnlinked = showWhenUnlinked
-        ..linkedOffset = linkedOffset
+        ..linkedOffset = adjustedLinkedOffset
         ..unlinkedOffset = unlinkedOffset;
     }
     context.pushLayer(
@@ -562,6 +581,16 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     }
 
     return Offset(dx, dy);
+  }
+
+  Rect _closestScreen(Iterable<Rect> screens, Offset point) {
+    Rect closest = screens.first;
+    for (final Rect screen in screens) {
+      if ((screen.center - point).distance < (closest.center - point).distance) {
+        closest = screen;
+      }
+    }
+    return closest;
   }
 
   @override

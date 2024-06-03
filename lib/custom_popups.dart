@@ -451,6 +451,8 @@ class _CountryPickerPopupState extends State<_CountryPickerPopup>
         child: (context, controller) => SizedBox(
           width: 200,
           child: TextField(
+            onTap: controller.show,
+            canRequestFocus: false,
             controller: textController,
             focusNode: textFieldFocusNode,
             decoration: const InputDecoration(
@@ -464,12 +466,11 @@ class _CountryPickerPopupState extends State<_CountryPickerPopup>
             builder: (context, value, _) {
               final filteredCountries = countryList
                   .where(
-                    (country) => country.name.toLowerCase().contains(
-                          textController.text.toLowerCase(),
-                        ),
+                    (country) =>
+                        country.name.toLowerCase().contains(textController.text.toLowerCase()),
                   )
                   .toList();
-              
+
               final enableShrinkWrap = filteredCountries.length < 4;
 
               return PopupFollower(

@@ -475,7 +475,7 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
         ? _adjustOverflow(
               followerRect: followerGlobalPosition & size,
               targetRect: leaderGlobalPosition & leaderSize,
-              screenSize: constraints.biggest,
+              allowedRect: allowedRect,
               edgePadding: edgePadding,
               flip: flip,
             ) -
@@ -517,7 +517,7 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
   Offset _adjustOverflow({
     required Rect followerRect,
     required Rect targetRect,
-    required Size screenSize,
+    required Rect allowedRect,
     required EdgeInsets edgePadding,
     required bool flip,
   }) {
@@ -525,10 +525,10 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
     double dy = followerRect.top;
 
     // Effective screen area considering edge padding
-    final double leftBoundary = edgePadding.left;
-    final double topBoundary = edgePadding.top;
-    final double rightBoundary = screenSize.width - edgePadding.right;
-    final double bottomBoundary = screenSize.height - edgePadding.bottom;
+    final double leftBoundary = allowedRect.left + edgePadding.left;
+    final double topBoundary = allowedRect.top + edgePadding.top;
+    final double rightBoundary = allowedRect.right - edgePadding.right;
+    final double bottomBoundary = allowedRect.bottom - edgePadding.bottom;
 
     // Check for horizontal overflow
     if (flip) {

@@ -253,49 +253,47 @@ class _BasicPopup extends StatelessWidget {
   const _BasicPopup();
 
   @override
-  Widget build(BuildContext context) {
-    return Popup(
-      child: (context, controller) => FilledButton(
-        onPressed: () => controller.show(),
-        child: const Text('Show Simple Popup'),
-      ),
-      follower: (context, controller) => SizedBox(
-        width: 200,
-        child: Card(
-          margin: EdgeInsets.zero,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    topRight: Radius.circular(8),
+  Widget build(BuildContext context) => Popup(
+        child: (context, controller) => FilledButton(
+          onPressed: () => controller.show(),
+          child: const Text('Show Simple Popup'),
+        ),
+        follower: (context, controller) => SizedBox(
+          width: 200,
+          child: Card(
+            margin: EdgeInsets.zero,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
                   ),
+                  title: const Text('Item 1'),
+                  onTap: controller.hide,
                 ),
-                title: const Text('Item 1'),
-                onTap: controller.hide,
-              ),
-              ListTile(
-                title: const Text('Item 2'),
-                onTap: controller.hide,
-              ),
-              ListTile(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
+                ListTile(
+                  title: const Text('Item 2'),
+                  onTap: controller.hide,
+                ),
+                ListTile(
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    ),
                   ),
+                  title: const Text('Item 3'),
+                  onTap: controller.hide,
                 ),
-                title: const Text('Item 3'),
-                onTap: controller.hide,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _CustomAnchorPopup extends StatelessWidget {

@@ -213,12 +213,8 @@ class TooltipPopup extends StatelessWidget {
       targetAnchor: Alignment.bottomCenter,
       followerAnchor: Alignment.topCenter,
       child: (context, controller) => MouseRegion(
-        onEnter: (_) {
-          controller.show();
-        },
-        onExit: (_) {
-          controller.hide();
-        },
+        onEnter: (_) => controller.show(),
+        onExit: (_) => controller.hide(),
         child: TapRegion(
           groupId: 'tooltip',
           child: IconButton(
@@ -258,38 +254,41 @@ class _BasicPopup extends StatelessWidget {
           onPressed: () => controller.show(),
           child: const Text('Show Simple Popup'),
         ),
-        follower: (context, controller) => SizedBox(
-          width: 200,
-          child: Card(
-            margin: EdgeInsets.zero,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
+        follower: (context, controller) => TapRegion(
+          onTapOutside: (_) => controller.hide(),
+          child: SizedBox(
+            width: 200,
+            child: Card(
+              margin: EdgeInsets.zero,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
+                      ),
                     ),
+                    title: const Text('Item 1'),
+                    onTap: controller.hide,
                   ),
-                  title: const Text('Item 1'),
-                  onTap: controller.hide,
-                ),
-                ListTile(
-                  title: const Text('Item 2'),
-                  onTap: controller.hide,
-                ),
-                ListTile(
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
+                  ListTile(
+                    title: const Text('Item 2'),
+                    onTap: controller.hide,
+                  ),
+                  ListTile(
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      ),
                     ),
+                    title: const Text('Item 3'),
+                    onTap: controller.hide,
                   ),
-                  title: const Text('Item 3'),
-                  onTap: controller.hide,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

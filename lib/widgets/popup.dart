@@ -315,7 +315,6 @@ class PopupFollowerState extends State<PopupFollower>
           },
           child: Semantics(
             container: true,
-            explicitChildNodes: true,
             child: FocusScope(
               debugLabel: 'PopupFollower',
               node: widget.focusScopeNode,

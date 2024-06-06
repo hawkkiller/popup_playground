@@ -195,7 +195,7 @@ class PopupFollower extends StatefulWidget {
     this.dismissOnResize = false,
     this.dismissOnScroll = true,
     this.constraints = const BoxConstraints(),
-    this.autofocus = false,
+    this.autofocus = true,
     super.key,
   }) : assert(child != null || builder != null);
 

@@ -45,32 +45,30 @@ class CustomDropdown<T> extends StatelessWidget {
             ),
           ),
         ),
-        follower: (context, controller) {
-          return PopupFollower(
-            onDismiss: controller.hide,
-            tapRegionGroupId: controller,
-            child: IntrinsicWidth(
-              child: Card(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: items.mapIndexed(
-                    (index, item) => ListTile(
-                      autofocus: activeItem == null ? index == 0 : item == activeItem,
-                      title: Text(item.label),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                      ),
-                      onTap: () {
-                        onChanged?.call(item);
-                        controller.hide();
-                      },
+        follower: (context, controller) => PopupFollower(
+          onDismiss: controller.hide,
+          tapRegionGroupId: controller,
+          child: IntrinsicWidth(
+            child: Card(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: items.mapIndexed(
+                  (index, item) => ListTile(
+                    autofocus: activeItem == null ? index == 0 : item == activeItem,
+                    title: Text(item.label),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
+                    onTap: () {
+                      onChanged?.call(item);
+                      controller.hide();
+                    },
                   ),
                 ),
               ),
             ),
-          );
-        },
+          ),
+        ),
       );
 }
 

@@ -1,9 +1,9 @@
 import 'dart:ui';
 
-import 'package:popup_playground/widgets/enhanced_composited_transform_follower.dart';
-import 'package:popup_playground/widgets/enhanced_composited_transform_target.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:popup_playground/widgets/enhanced_composited_transform_follower.dart';
+import 'package:popup_playground/widgets/enhanced_composited_transform_target.dart';
 
 /// A function that builds a widget with a controller.
 typedef PopupWidgetBuilder = Widget Function(
@@ -185,8 +185,7 @@ class PopupFollower extends StatefulWidget {
   ///
   /// {@macro popup_follower}
   const PopupFollower({
-    this.child,
-    this.builder,
+    required this.child,
     this.onDismiss,
     this.tapRegionGroupId,
     this.focusScopeNode,
@@ -197,13 +196,10 @@ class PopupFollower extends StatefulWidget {
     this.constraints = const BoxConstraints(),
     this.autofocus = true,
     super.key,
-  }) : assert(child != null || builder != null);
+  }) : assert(child != null);
 
   /// The child widget that is wrapped.
   final Widget? child;
-
-  /// Optional builder that wraps the child widget.
-  final PopupFollowerBuilder? builder;
 
   /// The callback that is called when the popup is dismissed.
   ///
@@ -245,12 +241,17 @@ class PopupFollower extends StatefulWidget {
 class PopupFollowerState extends State<PopupFollower>
     with WidgetsBindingObserver
     implements PopupFollowerController {
-  late final isRoot = FollowerScope.maybeOf(context) == null;
+  late final FocusScopeNode _focusScopeNode;
+  FollowerScope? _parent;
   ScrollPosition? _scrollPosition;
+
+  bool get isRoot => _parent == null;
 
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
+    _focusScopeNode = widget.focusScopeNode ?? FocusScopeNode(debugLabel: 'PopupFollower');
+
     super.initState();
   }
 
@@ -258,6 +259,10 @@ class PopupFollowerState extends State<PopupFollower>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _scrollPosition?.removeListener(_scrollableListener);
+
+    if (widget.focusScopeNode == null) {
+      _focusScopeNode.dispose();
+    }
     super.dispose();
   }
 
@@ -265,6 +270,7 @@ class PopupFollowerState extends State<PopupFollower>
   void didChangeDependencies() {
     _scrollPosition?.removeListener(_scrollableListener);
     _scrollPosition = Scrollable.maybeOf(context)?.position?..addListener(_scrollableListener);
+    _parent = FollowerScope.maybeOf(context, listen: true);
     super.didChangeDependencies();
   }
 
@@ -290,53 +296,43 @@ class PopupFollowerState extends State<PopupFollower>
   }
 
   @override
-  Widget build(BuildContext context) {
-    Widget? child;
-
-    if (widget.builder != null) {
-      child = widget.builder!(context, widget.child);
-    } else {
-      child = widget.child;
-    }
-
-    return FollowerScope(
-      controller: this,
-      parent: FollowerScope.maybeOf(context, listen: true),
-      child: Actions(
-        actions: {
-          DismissIntent: CallbackAction<DismissIntent>(
-            onInvoke: (intent) => widget.onDismiss?.call(),
-          ),
-        },
-        child: Shortcuts(
-          debugLabel: 'PopupFollower',
-          shortcuts: {
-            LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
+  Widget build(BuildContext context) => FollowerScope(
+        controller: this,
+        parent: _parent,
+        child: Actions(
+          actions: {
+            DismissIntent: CallbackAction<DismissIntent>(
+              onInvoke: (intent) => widget.onDismiss?.call(),
+            ),
           },
-          child: Semantics(
-            container: true,
-            explicitChildNodes: true,
-            child: FocusScope(
-              debugLabel: 'PopupFollower',
-              node: widget.focusScopeNode,
-              skipTraversal: widget.skipTraversal,
-              autofocus: widget.autofocus,
-              child: TapRegion(
+          child: Shortcuts(
+            debugLabel: 'PopupFollower',
+            shortcuts: {
+              LogicalKeySet(LogicalKeyboardKey.escape): const DismissIntent(),
+            },
+            child: Semantics(
+              container: true,
+              explicitChildNodes: true,
+              child: FocusScope(
                 debugLabel: 'PopupFollower',
-                groupId: widget.tapRegionGroupId,
-                consumeOutsideTaps: widget.consumeOutsideTaps,
-                onTapOutside: (_) => widget.onDismiss?.call(),
-                child: ConstrainedBox(
-                  constraints: widget.constraints,
-                  child: child,
+                node: _focusScopeNode,
+                skipTraversal: widget.skipTraversal,
+                canRequestFocus: true,
+                child: TapRegion(
+                  debugLabel: 'PopupFollower',
+                  groupId: widget.tapRegionGroupId,
+                  consumeOutsideTaps: widget.consumeOutsideTaps,
+                  onTapOutside: (_) => widget.onDismiss?.call(),
+                  child: ConstrainedBox(
+                    constraints: widget.constraints,
+                    child: widget.child,
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 /// Follower Scope

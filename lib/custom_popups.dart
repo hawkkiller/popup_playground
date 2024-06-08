@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:popup_playground/countries.dart';
+import 'package:popup_playground/widgets/custom_dropdown.dart';
 import 'package:popup_playground/widgets/popup.dart';
 import 'package:popup_playground/widgets/showcase_widgets.dart';
 
@@ -35,7 +36,7 @@ class _CustomPopupsShowcaseState extends State<CustomPopupsShowcase> {
               description: 'The simplest popup that shows a list of '
                   'items without any special behavior.',
               expanded: expanded,
-              child: const _BasicPopup(),
+              child: const _CustomDropdown(),
             ),
           ),
         ),
@@ -132,6 +133,30 @@ class _CustomPopupsShowcaseState extends State<CustomPopupsShowcase> {
       ],
     );
   }
+}
+
+class _CustomDropdown extends StatefulWidget {
+  const _CustomDropdown();
+
+  @override
+  State<_CustomDropdown> createState() => _CustomDropdownState();
+}
+
+class _CustomDropdownState extends State<_CustomDropdown> {
+  static const items = [
+    CustomDropdownEntry('1', 'Item 1'),
+    CustomDropdownEntry('2', 'Item 2'),
+    CustomDropdownEntry('3', 'Item 3'),
+  ];
+
+  CustomDropdownEntry? value;
+
+  @override
+  Widget build(BuildContext context) => CustomDropdown(
+        items: items,
+        activeItem: value,
+        onChanged: (entry) => setState(() => value = entry),
+      );
 }
 
 class AnimatedTooltip extends StatefulWidget {
@@ -242,55 +267,6 @@ class TooltipPopup extends StatelessWidget {
                 style: theme.textTheme.bodyMedium,
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BasicPopup extends StatelessWidget {
-  const _BasicPopup();
-
-  @override
-  Widget build(BuildContext context) {
-    return Popup(
-      child: (context, controller) => FilledButton(
-        onPressed: () => controller.show(),
-        child: const Text('Show Simple Popup'),
-      ),
-      follower: (context, controller) => SizedBox(
-        width: 200,
-        child: Card(
-          margin: EdgeInsets.zero,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    topRight: Radius.circular(8),
-                  ),
-                ),
-                title: const Text('Item 1'),
-                onTap: controller.hide,
-              ),
-              ListTile(
-                title: const Text('Item 2'),
-                onTap: controller.hide,
-              ),
-              ListTile(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
-                  ),
-                ),
-                title: const Text('Item 3'),
-                onTap: controller.hide,
-              ),
-            ],
           ),
         ),
       ),

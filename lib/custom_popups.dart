@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:popup_playground/countries.dart';
 import 'package:popup_playground/widgets/custom_dropdown.dart';
+import 'package:popup_playground/widgets/custom_tooltip.dart';
 import 'package:popup_playground/widgets/popup.dart';
 import 'package:popup_playground/widgets/showcase_widgets.dart';
 
@@ -32,9 +32,9 @@ class _CustomPopupsShowcaseState extends State<CustomPopupsShowcase> {
           child: SizedBox(
             width: 700,
             child: WidgetWithDescription(
-              title: 'Basic popup',
-              description: 'The simplest popup that shows a list of '
-                  'items without any special behavior.',
+              title: 'Dropdown',
+              description: 'Popup that shows a list of items when tapped. '
+                  'The dropdown is shown below the target widget if there is enough space.',
               expanded: expanded,
               child: const _CustomDropdown(),
             ),
@@ -46,39 +46,10 @@ class _CustomPopupsShowcaseState extends State<CustomPopupsShowcase> {
           child: SizedBox(
             width: 700,
             child: WidgetWithDescription(
-              title: 'Dismissible popup',
-              description: 'A popup that shows a list of items with a dismiss '
-                  'behavior when tapping outside the popup. ',
-              expanded: expanded,
-              child: const _DismissiblePopup(),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 700,
-            child: WidgetWithDescription(
               title: 'Custom Anchor',
-              description: 'A popup that is anchored that is shown on the right '
-                  'side of the target.',
+              description: 'Popup that is shown on the right side of a button.',
               expanded: expanded,
               child: const _CustomAnchorPopup(),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 700,
-            child: WidgetWithDescription(
-              title: 'Country Picker',
-              description: 'A custom popup that is used to pick a country. '
-                  'It is anchored to a text field and shows a list of countries.',
-              expanded: expanded,
-              child: const _CountryPickerPopup(),
             ),
           ),
         ),
@@ -102,26 +73,10 @@ class _CustomPopupsShowcaseState extends State<CustomPopupsShowcase> {
           child: SizedBox(
             width: 700,
             child: WidgetWithDescription(
-              title: 'Simple Tooltip',
-              description: 'A simple tooltip that shows when hovering over a widget on desktop. '
-                  'However, on mobile, it will show when tapping on the widget.',
+              title: 'Tooltip',
+              description: 'An animated tooltip that is shown when hovering over an icon.',
               expanded: expanded,
               child: const TooltipPopup(),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 700,
-            child: WidgetWithDescription(
-              title: 'Animated Tooltip',
-              description: 'The same tooltip as the simple tooltip but with an animation '
-                  'when showing and hiding the tooltip. '
-                  'This approach may be used in other custom popups to add animations.',
-              expanded: expanded,
-              child: const AnimatedTooltip(),
             ),
           ),
         ),
@@ -232,46 +187,13 @@ class TooltipPopup extends StatelessWidget {
   const TooltipPopup({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Popup(
-      targetAnchor: Alignment.bottomCenter,
-      followerAnchor: Alignment.topCenter,
-      child: (context, controller) => MouseRegion(
-        onEnter: (_) {
-          controller.show();
-        },
-        onExit: (_) {
-          controller.hide();
-        },
-        child: TapRegion(
-          groupId: 'tooltip',
-          child: IconButton(
-            icon: const Icon(Icons.info),
-            onPressed: () => controller.isShowing ? controller.hide() : controller.show(),
-            color: Theme.of(context).colorScheme.secondary,
-          ),
+  Widget build(BuildContext context) => CustomTooltip(
+        content: const Text(
+          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+          'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
         ),
-      ),
-      follower: (context, controller) => PopupFollower(
-        tapRegionGroupId: 'tooltip',
-        onDismiss: controller.hide,
-        child: SizedBox(
-          width: 300,
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-                'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+        child: Icon(Icons.info, color: Theme.of(context).colorScheme.secondary),
+      );
 }
 
 class _CustomAnchorPopup extends StatelessWidget {
@@ -282,15 +204,14 @@ class _CustomAnchorPopup extends StatelessWidget {
         targetAnchor: Alignment.centerRight,
         followerAnchor: Alignment.centerLeft,
         child: (context, controller) => FilledButton(
-          onPressed: () => controller.show(),
+          onPressed: controller.show,
           child: const Text('Show Popup with Custom Anchor'),
         ),
         follower: (context, controller) => PopupFollower(
           onDismiss: controller.hide,
           child: SizedBox(
-            width: 200,
+            width: 150,
             child: Card(
-              margin: EdgeInsets.zero,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -323,165 +244,6 @@ class _CustomAnchorPopup extends StatelessWidget {
             ),
           ),
         ),
-      );
-}
-
-class _DismissiblePopup extends StatelessWidget {
-  const _DismissiblePopup();
-
-  @override
-  Widget build(BuildContext context) => Popup(
-        child: (context, controller) => TapRegion(
-          groupId: 'ClosesPopup',
-          child: FilledButton(
-            onPressed: () => controller.show(),
-            child: const Text('Show Dismissible Popup'),
-          ),
-        ),
-        follower: (context, controller) => PopupFollower(
-          tapRegionGroupId: 'ClosesPopup',
-          onDismiss: controller.hide,
-          child: SizedBox(
-            width: 200,
-            child: Card(
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(4)),
-              ),
-              margin: EdgeInsets.zero,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(4),
-                        topRight: Radius.circular(4),
-                      ),
-                    ),
-                    title: const Text('Item 1'),
-                    onTap: controller.hide,
-                  ),
-                  ListTile(
-                    title: const Text('Item 2'),
-                    onTap: controller.hide,
-                  ),
-                  ListTile(
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(4),
-                        bottomRight: Radius.circular(4),
-                      ),
-                    ),
-                    title: const Text('Item 3'),
-                    onTap: controller.hide,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-}
-
-class _CountryPickerPopup extends StatefulWidget {
-  const _CountryPickerPopup();
-
-  @override
-  State<_CountryPickerPopup> createState() => _CountryPickerPopupState();
-}
-
-class _CountryPickerPopupState extends State<_CountryPickerPopup>
-    with SingleTickerProviderStateMixin {
-  final textController = TextEditingController();
-  final popupController = OverlayPortalController();
-  final textFieldFocusNode = FocusNode();
-
-  @override
-  void initState() {
-    textFieldFocusNode.addListener(() {
-      if (textFieldFocusNode.hasFocus) {
-        popupController.show();
-      }
-    });
-
-    textController.addListener(() {
-      if (!popupController.isShowing) {
-        popupController.show();
-      }
-    });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    textController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Popup(
-        targetAnchor: Alignment.bottomCenter,
-        followerAnchor: Alignment.topCenter,
-        enforceLeaderWidth: true,
-        controller: popupController,
-        child: (context, controller) => SizedBox(
-          width: 200,
-          child: TextField(
-            onTap: controller.show,
-            canRequestFocus: false,
-            controller: textController,
-            focusNode: textFieldFocusNode,
-            decoration: const InputDecoration(
-              hintText: 'Select a country',
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
-        follower: (context, controller) => ValueListenableBuilder(
-            valueListenable: textController,
-            builder: (context, value, _) {
-              final filteredCountries = countryList
-                  .where(
-                    (country) =>
-                        country.name.toLowerCase().contains(textController.text.toLowerCase()),
-                  )
-                  .toList();
-
-              final enableShrinkWrap = filteredCountries.length < 4;
-
-              return PopupFollower(
-                onDismiss: controller.hide,
-                child: SizedBox(
-                  height: enableShrinkWrap ? null : 200,
-                  child: Card(
-                    child: Visibility(
-                      visible: filteredCountries.isNotEmpty,
-                      replacement: const Center(
-                        child: Text('No countries found ☹️'),
-                      ),
-                      child: ListView.builder(
-                        shrinkWrap: enableShrinkWrap,
-                        itemCount: filteredCountries.length,
-                        itemBuilder: (context, index) {
-                          final country = filteredCountries[index];
-
-                          return ListTile(
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(8)),
-                            ),
-                            title: Text(country.name),
-                            onTap: () {
-                              textController.text = country.name;
-                              controller.hide();
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
       );
 }
 

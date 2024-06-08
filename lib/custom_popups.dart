@@ -98,11 +98,10 @@ class _CustomDropdown extends StatefulWidget {
 }
 
 class _CustomDropdownState extends State<_CustomDropdown> {
-  static const items = [
-    CustomDropdownEntry('1', 'Item 1'),
-    CustomDropdownEntry('2', 'Item 2'),
-    CustomDropdownEntry('3', 'Item 3'),
-  ];
+  static final items = List.generate(
+    5,
+    (index) => CustomDropdownEntry(index, 'Item $index'),
+  );
 
   CustomDropdownEntry? value;
 

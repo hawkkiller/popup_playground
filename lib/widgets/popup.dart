@@ -241,7 +241,6 @@ class PopupFollower extends StatefulWidget {
 class PopupFollowerState extends State<PopupFollower>
     with WidgetsBindingObserver
     implements PopupFollowerController {
-  late final FocusScopeNode _focusScopeNode;
   FollowerScope? _parent;
   ScrollPosition? _scrollPosition;
 
@@ -250,20 +249,8 @@ class PopupFollowerState extends State<PopupFollower>
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
-    _focusScopeNode = widget.focusScopeNode ?? FocusScopeNode(debugLabel: 'PopupFollower');
 
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _scrollPosition?.removeListener(_scrollableListener);
-
-    if (widget.focusScopeNode == null) {
-      _focusScopeNode.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -296,6 +283,14 @@ class PopupFollowerState extends State<PopupFollower>
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _scrollPosition?.removeListener(_scrollableListener);
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => FollowerScope(
         controller: this,
         parent: _parent,
@@ -315,7 +310,7 @@ class PopupFollowerState extends State<PopupFollower>
               explicitChildNodes: true,
               child: FocusScope(
                 debugLabel: 'PopupFollower',
-                node: _focusScopeNode,
+                node: widget.focusScopeNode,
                 skipTraversal: widget.skipTraversal,
                 canRequestFocus: true,
                 child: TapRegion(

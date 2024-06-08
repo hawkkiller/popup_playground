@@ -91,6 +91,7 @@ class _CustomTooltipState extends State<CustomTooltip> with SingleTickerProvider
   Widget build(BuildContext context) => Popup(
         controller: overlayController,
         follower: (context, controller) => PopupFollower(
+          tapRegionGroupId: controller,
           onDismiss: _hidePopup,
           child: FadeTransition(
             opacity: _animationController,

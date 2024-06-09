@@ -187,10 +187,8 @@ class TooltipPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomTooltip(
-        content: const Text(
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-          'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-        ),
+        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+            'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
         child: Icon(Icons.info, color: Theme.of(context).colorScheme.secondary),
       );
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:popup_playground/widgets/popup.dart';
 
 /// A custom tooltip widget that can be used to display a tooltip with custom content
@@ -10,21 +11,7 @@ class CustomTooltip extends StatefulWidget {
     super.key,
   });
 
-  /// Convenience constructor to create a [CustomTooltip] with a [Text] widget as content
-  factory CustomTooltip.text({
-    required String text,
-    required Widget child,
-    Duration? animationDuration,
-    Key? key,
-  }) =>
-      CustomTooltip(
-        key: key,
-        content: Text(text),
-        animationDuration: animationDuration,
-        child: child,
-      );
-
-  final Widget content;
+  final String content;
   final Widget child;
   final Duration? animationDuration;
 
@@ -62,6 +49,7 @@ class _CustomTooltipState extends State<CustomTooltip> with SingleTickerProvider
   void _showPopup([Duration? duration]) {
     overlayController.show();
     _animationController.forward();
+    SemanticsService.tooltip(widget.content);
 
     if (duration != null) {
       Future.delayed(duration, _hidePopup).ignore();
@@ -100,7 +88,7 @@ class _CustomTooltipState extends State<CustomTooltip> with SingleTickerProvider
               child: Card(
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: widget.content,
+                  child: Text(widget.content),
                 ),
               ),
             ),
@@ -123,9 +111,12 @@ class _CustomTooltipState extends State<CustomTooltip> with SingleTickerProvider
               break;
           }
 
-          return TapRegion(
-            groupId: controller,
-            child: result,
+          return Semantics(
+            tooltip: widget.content,
+            child: TapRegion(
+              groupId: controller,
+              child: result,
+            ),
           );
         },
       );

@@ -114,8 +114,8 @@ class EnhancedRenderLeaderLayer extends RenderProxyBox {
   @override
   void performLayout() {
     super.performLayout();
-    link.leaderSizeChanged(size);
     if (_previousLayoutSize != size) {
+      link.leaderSizeChanged(size);
       _previousLayoutSize = size;
     }
   }

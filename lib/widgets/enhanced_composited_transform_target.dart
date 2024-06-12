@@ -81,9 +81,7 @@ class EnhancedRenderLeaderLayer extends RenderProxyBox {
     required EnhancedLayerLink link,
     RenderBox? child,
   })  : _link = link,
-        super(child) {
-    link.leaderRenderObject = this;
-  }
+        super(child);
 
   /// The link object that connects this [EnhancedRenderLeaderLayer] with one or more
   /// [RenderFollowerLayer]s.
@@ -137,6 +135,12 @@ class EnhancedRenderLeaderLayer extends RenderProxyBox {
       layer!.debugCreator = debugCreator;
       return true;
     }());
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    link.leaderRenderObject = this;
+    super.attach(owner);
   }
 
   @override

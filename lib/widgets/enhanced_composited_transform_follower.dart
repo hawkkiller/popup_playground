@@ -197,9 +197,7 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
         _enforceLeaderWidth = enforceLeaderWidth,
         _enforceLeaderHeight = enforceLeaderHeight,
         _displayFeatureBounds = displayFeatureBounds,
-        super(child) {
-    link.followerRenderObject = this;
-  }
+        super(child);
 
   /// Called when the size of the leader widget changes.
   void leaderSizeChanged() {
@@ -368,6 +366,12 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
   }
 
   @override
+  void attach(PipelineOwner owner) {
+    link.followerRenderObject = this;
+    super.attach(owner);
+  }
+
+  @override
   void detach() {
     layer = null;
     link.followerRenderObject = null;
@@ -445,56 +449,51 @@ class EnhancedRenderFollowerLayer extends RenderProxyBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    assert(
-      link.leaderSize != null || link.leader == null || leaderAnchor == Alignment.topLeft,
-      '$link: layer is linked to ${link.leader} but a valid leaderSize is not set. '
-      'leaderSize is required when leaderAnchor is not Alignment.topLeft '
-      '(current value is $leaderAnchor).',
-    );
     final overlayRect = Offset.zero & constraints.biggest;
-    // If the leader is not linked, and we're not supposed to show anything
-    final unlinkedOffset = offset;
+    final leaderRenderObject = link.leaderRenderObject;
+    Offset linkedOffset = Offset.zero;
 
-    final leaderGlobalPosition = link.leaderRenderObject!.localToGlobal(Offset.zero);
-    final leaderSize = link.leaderSize!;
+    if (leaderRenderObject != null) {
+      final leaderGlobalPosition = leaderRenderObject.localToGlobal(Offset.zero);
+      final leaderSize = leaderRenderObject.size;
 
-    final Iterable<Rect> subScreens = DisplayFeatureSubScreen.subScreensInBounds(
-      overlayRect,
-      displayFeatureBounds,
-    );
+      final Iterable<Rect> subScreens = DisplayFeatureSubScreen.subScreensInBounds(
+        overlayRect,
+        displayFeatureBounds,
+      );
 
-    // TODO(mlazebny): figure out how to correctly treat allowedRect
-    // ignore: unused_local_variable
-    final Rect allowedRect = _closestScreen(subScreens, leaderGlobalPosition);
+      // TODO(mlazebny): figure out how to correctly treat allowedRect
+      // ignore: unused_local_variable
+      final Rect allowedRect = _closestScreen(subScreens, leaderGlobalPosition);
 
-    final followerRelativeOffset =
-        leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size);
-    final followerGlobalPosition = leaderGlobalPosition + followerRelativeOffset;
+      linkedOffset = leaderAnchor.alongSize(leaderSize) - followerAnchor.alongSize(size);
+      final followerGlobalPosition = leaderGlobalPosition + linkedOffset;
 
-    final Offset adjustedLinkedOffset = adjustForOverflow
-        ? _adjustOverflow(
+      if (adjustForOverflow) {
+        linkedOffset = _adjustOverflow(
               followerRect: followerGlobalPosition & size,
               targetRect: leaderGlobalPosition & leaderSize,
               screenSize: constraints.biggest,
               edgePadding: edgePadding,
               flip: flip,
             ) -
-            leaderGlobalPosition
-        : followerRelativeOffset;
+            leaderGlobalPosition;
+      }
+    }
 
     if (layer == null) {
       layer = FollowerLayer(
         link: link,
         showWhenUnlinked: showWhenUnlinked,
-        linkedOffset: adjustedLinkedOffset,
-        unlinkedOffset: unlinkedOffset,
+        linkedOffset: linkedOffset,
+        unlinkedOffset: offset,
       );
     } else {
       layer
         ?..link = link
         ..showWhenUnlinked = showWhenUnlinked
-        ..linkedOffset = adjustedLinkedOffset
-        ..unlinkedOffset = unlinkedOffset;
+        ..linkedOffset = linkedOffset
+        ..unlinkedOffset = offset;
     }
     context.pushLayer(
       layer!,
